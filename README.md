@@ -22,6 +22,10 @@ git clone git://git.gnome.org/gegl
 git clone git://git.gnome.org/gegl-gtk
 git clone git://gitorious.org/mypaint/mypaint.git
 
+# clone these examples too
+
+git clone https://github.com/manuq/gegl-examples.git
+
 # these variables are to build in user-space and to enable GEGL in
 # MyPaint.
 
@@ -56,4 +60,14 @@ cd ..
 cd mypaint
 scons enable_gegl=true
 cd ..
+```
+
+Play
+----
+
+For learning purposes, you can see the examples as incremental steps
+that grow in complexity.  You can move from step to step with git:
+
+```bash
+git checkout -f step-0
 ```
