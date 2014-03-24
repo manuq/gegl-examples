@@ -7,6 +7,7 @@ from gi.repository import Gegl, Gtk, Gdk, GObject
 from gi.repository import GeglGtk3 as GeglGtk
 
 from lib import tiledsurface, brush
+from timelinewidget import TimelineWidget
 
 
 class Cel(object):
@@ -166,6 +167,9 @@ class FlipbookApp(object):
         view_widget.set_size_request(800, 400)
         event_box.add(view_widget)
 
+        self.timeline_widget = TimelineWidget(self)
+        top_box.add(self.timeline_widget)
+
         window.show_all()
 
     def run(self):
@@ -204,6 +208,7 @@ class FlipbookApp(object):
         if changed:
             self.update_surface()
             self.update_graph()
+            self.timeline_widget.queue_draw()
 
         return changed
 
@@ -212,6 +217,7 @@ class FlipbookApp(object):
         if changed:
             self.update_surface()
             self.update_graph()
+            self.timeline_widget.queue_draw()
 
         return changed
 
