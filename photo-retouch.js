@@ -18,10 +18,19 @@ PhotoApp.prototype.createGraph = function () {
 
     this.nodes['root'] = this.graph.create_child("gegl:over");
 
+    this.nodes['brightness-contrast'] = this.graph.create_child(
+        "gegl:brightness-contrast");
+
+    this.nodes['brightness-contrast'].set_property('contrast', 4);
+    this.nodes['brightness-contrast'].set_property('brightness', 1);
+
+    this.nodes['brightness-contrast'].connect_to(
+        "output", this.nodes['root'], "input");
+
     this.nodes['photo'] = this.graph.create_child("gegl:load");
     this.nodes['photo'].set_property("path", 'sample.jpg');
     this.nodes['photo'].connect_to(
-        "output", this.nodes['root'], "input");
+        "output", this.nodes['brightness-contrast'], "input");
 }
 
 PhotoApp.prototype.initUi = function () {
