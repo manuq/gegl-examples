@@ -3,10 +3,57 @@
 import sys
 sys.path.append("../mypaint")
 
-from gi.repository import Gegl, Gtk
+from gi.repository import Gegl, Gtk, Gdk, GObject
 from gi.repository import GeglGtk3 as GeglGtk
 
 from lib import tiledsurface, brush
+
+
+class Cel(object):
+    def __init__(self):
+        self.surface = tiledsurface.GeglSurface()
+        self.surface_node = self.surface.get_node()
+
+
+class Timeline(object):
+    def __init__(self, length):
+        self.idx = 0
+        self.frames = []
+        for idx in range(length):
+            self.frames.append(Cel())
+
+    def go_previous(self, loop=False):
+        if not loop:
+            if self.idx == 0:
+                return False
+        else:
+            if self.idx == 0:
+                self.idx = len(self.frames)-1
+                return True
+
+        self.idx -= 1
+        return True
+
+    def go_next(self, loop=False):
+        if not loop:
+            if self.idx == len(self.frames)-1:
+                return False
+        else:
+            if self.idx == len(self.frames)-1:
+                self.idx = 0
+                return True
+
+        self.idx += 1
+        return True
+
+    def get_cel(self, idx=None):
+        if idx is None:
+            idx = self.idx
+
+        if idx < 0 or idx > len(self.frames)-1:
+            return False
+
+        return self.frames[idx]
 
 
 class FlipbookApp(object):
@@ -19,8 +66,13 @@ class FlipbookApp(object):
         self.button_pressed = False
         self.last_event = (0.0, 0.0, 0.0)  # (x, y, time)
 
-        self.surface = tiledsurface.GeglSurface()
-        self.surface_node = self.surface.get_node()
+        self.surface = None
+        self.surface_node = None
+
+        self.play_hid = None
+
+        self.timeline = Timeline(12)
+        self.update_surface()
 
         self.graph = None
         self.nodes = {}
@@ -42,6 +94,9 @@ class FlipbookApp(object):
         self.nodes['background'].connect_to(
             "output", self.nodes['root'], "input")
 
+        self.update_graph()
+
+    def update_graph(self):
         self.surface_node.connect_to(
             "output", self.nodes['root'], "aux")
 
@@ -49,6 +104,7 @@ class FlipbookApp(object):
         window = Gtk.Window()
         window.props.title = "Flipbook"
         window.connect("destroy", self.destroy_cb)
+        window.connect("key-release-event", self.key_release_cb)
 
         top_box = Gtk.Box()
         top_box.props.orientation = Gtk.Orientation.VERTICAL;
@@ -93,6 +149,42 @@ class FlipbookApp(object):
     def button_release_cb(self, widget, event):
         self.button_pressed = False
         self.brush.reset()
+
+    def update_surface(self):
+        cel = self.timeline.get_cel()
+        self.surface = cel.surface
+        self.surface_node = cel.surface_node
+
+    def go_previous(self, loop=False):
+        changed = self.timeline.go_previous(loop)
+        if changed:
+            self.update_surface()
+            self.update_graph()
+
+        return changed
+
+    def go_next(self, loop=False):
+        changed = self.timeline.go_next(loop)
+        if changed:
+            self.update_surface()
+            self.update_graph()
+
+        return changed
+
+    def toggle_play_stop(self):
+        if self.play_hid == None:
+            self.play_hid = GObject.timeout_add(42, self.go_next, True)
+        else:
+            GObject.source_remove(self.play_hid)
+            self.play_hid = None
+
+    def key_release_cb(self, widget, event):
+        if event.keyval == Gdk.KEY_Left:
+            self.go_previous()
+        elif event.keyval == Gdk.KEY_Right:
+            self.go_next()
+        elif event.keyval == Gdk.KEY_p:
+            self.toggle_play_stop()
 
 
 if __name__ == '__main__':
