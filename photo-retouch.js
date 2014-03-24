@@ -4,6 +4,8 @@ const Gtk = imports.gi.Gtk;
 const Gegl = imports.gi.Gegl;
 const GeglGtk = imports.gi.GeglGtk3;
 
+const Lang = imports.lang;
+
 
 var PhotoApp = function () {
     this.graph = undefined;
@@ -20,9 +22,6 @@ PhotoApp.prototype.createGraph = function () {
 
     this.nodes['brightness-contrast'] = this.graph.create_child(
         "gegl:brightness-contrast");
-
-    this.nodes['brightness-contrast'].set_property('contrast', 4);
-    this.nodes['brightness-contrast'].set_property('brightness', 1);
 
     this.nodes['brightness-contrast'].connect_to(
         "output", this.nodes['root'], "input");
@@ -46,11 +45,53 @@ PhotoApp.prototype.initUi = function () {
     viewWidget.set_size_request(800, 400);
     topBox.add(viewWidget);
 
+    contrastLabel = new Gtk.Label();
+    contrastLabel.label = "Contrast:";
+    topBox.add(contrastLabel);
+
+    contrastAdj = new Gtk.Adjustment();
+    contrastAdj.lower = -5;
+    contrastAdj.upper = 5;
+    contrastAdj.set_value(1);
+
+    contrastAdj.signal.value_changed.connect(
+        Lang.bind(this, this.contrastChangedCb));
+
+    contrastScale = new Gtk.Scale();
+    contrastScale.set_adjustment(contrastAdj);
+    topBox.add(contrastScale);
+
+    brightnessLabel = new Gtk.Label();
+    brightnessLabel.label = "Brightness:";
+    topBox.add(brightnessLabel);
+
+    brightnessAdj = new Gtk.Adjustment();
+    brightnessAdj.lower = -3;
+    brightnessAdj.upper = 3;
+    brightnessAdj.set_value(0);
+
+    brightnessAdj.signal.value_changed.connect(
+        Lang.bind(this, this.brightnessChangedCb));
+
+    brightnessScale = new Gtk.Scale();
+    brightnessScale.set_adjustment(brightnessAdj);
+    topBox.add(brightnessScale);
+
     appWindow.show_all();
 }
 
 PhotoApp.prototype.run = function () {
     Gtk.main();
+}
+
+PhotoApp.prototype.contrastChangedCb = function (adjustment) {
+    this.nodes['brightness-contrast'].set_property(
+        'contrast', adjustment.value);
+}
+
+PhotoApp.prototype.brightnessChangedCb = function (adjustment) {
+    this.nodes['brightness-contrast'].set_property(
+        'brightness', adjustment.value);
 }
 
 
