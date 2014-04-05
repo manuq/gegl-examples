@@ -58,7 +58,7 @@ make install
 cd ..
 
 cd mypaint
-scons enable_gegl=true
+scons enable_gegl=true enable_introspection=true prefix=$prefix install
 cd ..
 ```
 
