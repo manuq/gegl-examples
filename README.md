@@ -71,3 +71,5 @@ that grow in complexity.  You can move from step to step with git:
 ```bash
 git checkout -f step-0
 ```
+
+An explanation of each step is drawn in graph.ora.
